@@ -21,7 +21,11 @@
         "backgroundColor": "#6B4E71"
       },
       "package": "com.devotionalcounter.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8f23bdfc-6631-467d-b74b-944d64be855f"
+      }
     }
   }
 }
-
