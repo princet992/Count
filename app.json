@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Devotional Counter",
+    "slug": "devotional-counter",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#6B4E71"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.devotionalcounter.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#6B4E71"
+      },
+      "package": "com.devotionalcounter.app"
+    }
+  }
+}
+
