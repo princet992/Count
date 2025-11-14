@@ -10,6 +10,7 @@ import {
   TextInput,
   ScrollView,
   Animated,
+  Dimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -18,6 +19,9 @@ const HISTORY_KEY = "scripture_history";
 const THEME_KEY = "scripture_theme_color";
 const TOTAL_KEY = "scripture_total";
 
+const { width, height } = Dimensions.get("window");
+const squareSize = Math.min(width, height) * 0.7; // 70% of screen dimension
+
 export default function App() {
   const [count, setCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -25,7 +29,6 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [goalInput, setGoalInput] = useState("");
   const [autoCountActive, setAutoCountActive] = useState(false);
-  const [autoSpeed, setAutoSpeed] = useState(500);
   const [themeColor, setThemeColor] = useState("#E29F36");
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -59,10 +62,12 @@ export default function App() {
     AsyncStorage.setItem(`count_${todayKey()}`, String(count));
     AsyncStorage.setItem(TOTAL_KEY, String(totalCount));
   }, [count, totalCount]);
+
   useEffect(() => {
     if (dailyGoal > 0) AsyncStorage.setItem(`goal_${todayKey()}`, String(dailyGoal));
     else AsyncStorage.removeItem(`goal_${todayKey()}`);
   }, [dailyGoal]);
+
   useEffect(() => {
     AsyncStorage.setItem(THEME_KEY, themeColor);
   }, [themeColor]);
@@ -76,17 +81,18 @@ export default function App() {
   // Increment count
   const increment = () => {
     setCount((c) => c + 1);
-    setTotalCount((t) => t + 1);
+    setTotalCount((t) => t + 1); // persistent total
     triggerGlow();
   };
 
-  // Auto count toggle
+  // Auto count toggle with min speed 300ms
   const toggleAutoCount = () => {
     if (autoCountActive) {
       clearInterval(autoInterval.current);
       setAutoCountActive(false);
     } else {
-      const speed = parseInt(speedInput, 10) || 500;
+      let speed = parseInt(speedInput, 10) || 500;
+      if (speed < 300) speed = 300;
       setAutoCountActive(true);
       autoInterval.current = setInterval(() => {
         setCount((c) => c + 1);
@@ -134,17 +140,18 @@ export default function App() {
   };
 
   const getProgressPercentage = () => (dailyGoal === 0 ? 0 : Math.min(100, Math.round((count / dailyGoal) * 100)));
-  const glowInterpolation = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.2] });
+  const glowInterpolation = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] });
+
   const colorPalette = [
-    "#E29F36", 
-    "#7A5533", 
-    "#b82988ff", 
-    "#A33E6B", 
-    "#3E6BA3", 
-    "#3EA36B", 
-    "#2fbb4dff", 
-    "#D9A066", 
-    "#8A6A4F", 
+    "#E29F36",
+    "#7A5533",
+    "#b82988ff",
+    "#A33E6B",
+    "#3E6BA3",
+    "#3EA36B",
+    "#2fbb4dff",
+    "#D9A066",
+    "#8A6A4F",
   ];
 
   return (
@@ -152,14 +159,19 @@ export default function App() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.header}>Scroll</Text>
 
-        <Animated.View style={[styles.circleContainer, { transform: [{ scale: glowInterpolation }] }]}>
+        {/* Persistent Total */}
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>Total Count: {totalCount}</Text>
+        </View>
+
+        {/* Counter Square */}
+        <Animated.View style={[styles.squareContainer, { transform: [{ scale: glowInterpolation }] }]}>
           <TouchableOpacity
             onPress={increment}
             activeOpacity={0.7}
-            style={[styles.circle, { borderColor: themeColor }]}
+            style={[styles.square, { borderColor: themeColor }]}
           >
             <Text style={[styles.count, { color: themeColor }]}>{count}</Text>
-            <Text style={styles.totalCount}>Total: {totalCount}</Text>
           </TouchableOpacity>
         </Animated.View>
 
@@ -176,11 +188,8 @@ export default function App() {
           </View>
         )}
 
-        <View style={styles.controls}>
-          <TouchableOpacity onPress={resetToday} style={[styles.controlBtn, { borderColor: themeColor }]}>
-            <Text style={[styles.controlText, { color: themeColor }]}>Reset</Text>
-          </TouchableOpacity>
-
+        {/* Auto Count + Speed */}
+        <View style={styles.autoRow}>
           <TouchableOpacity onPress={toggleAutoCount} style={[styles.controlBtn, { borderColor: themeColor }]}>
             <Text style={[styles.controlText, { color: themeColor }]}>
               {autoCountActive ? "Stop Auto" : "Auto Count"}
@@ -194,18 +203,32 @@ export default function App() {
             keyboardType="numeric"
             style={styles.speedInput}
           />
+        </View>
+      </ScrollView>
+
+      {/* Bottom Buttons */}
+      <View style={styles.bottomControls}>
+        {/* Row 1: Reset + Theme */}
+        <View style={styles.buttonRow}>
+          <TouchableOpacity onPress={resetToday} style={[styles.bottomBtn, { borderColor: themeColor }]}>
+            <Text style={[styles.bottomBtnText, { color: themeColor }]}>Reset</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => setShowColorModal(true)}
-            style={[styles.controlBtn, { borderColor: themeColor }]}
+            style={[styles.bottomBtn, { borderColor: themeColor }]}
           >
-            <Text style={[styles.controlText, { color: themeColor }]}>Theme</Text>
+            <Text style={[styles.bottomBtnText, { color: themeColor }]}>Theme</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.historyRow}>
-          <TouchableOpacity onPress={() => setShowGoalModal(true)} style={styles.actionBtn}>
-            <Text style={[styles.actionText, { color: themeColor }]}>Set Goal</Text>
+        {/* Row 2: Set Goal + History */}
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            onPress={() => setShowGoalModal(true)}
+            style={[styles.bottomBtn, { borderColor: themeColor }]}
+          >
+            <Text style={[styles.bottomBtnText, { color: themeColor }]}>Set Goal</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -213,13 +236,14 @@ export default function App() {
               commitDayHistory();
               setShowHistoryModal(true);
             }}
-            style={styles.actionBtn}
+            style={[styles.bottomBtn, { borderColor: themeColor }]}
           >
-            <Text style={[styles.actionText, { color: themeColor }]}>History</Text>
+            <Text style={[styles.bottomBtnText, { color: themeColor }]}>History</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
 
+      {/* Modals (Goal, History, Color) */}
       {/* Goal Modal */}
       <Modal visible={showGoalModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -316,27 +340,39 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f3e5ff" },
   content: { padding: 16, paddingBottom: 40 },
   header: { fontSize: 28, fontWeight: "800", color: "#6B4426", textAlign: "center", marginBottom: 20 },
-  circleContainer: { alignItems: "center", marginVertical: 20 },
-  circle: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+  totalContainer: { alignItems: "center", marginBottom: 10 },
+  totalText: { fontSize: 20, fontWeight: "700", color: "#6B4426" },
+  squareContainer: { alignItems: "center", marginVertical: 20 },
+  square: {
+    width: squareSize,
+    height: squareSize,
+    borderRadius: 20,
     borderWidth: 4,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#FFF9F0",
   },
   count: { fontSize: 48, fontWeight: "800" },
-  totalCount: { fontSize: 14, color: "#7A5533", marginTop: 6 },
   progressWrap: { marginTop: 20 },
   progressBar: { height: 12, backgroundColor: "#EFE6CF", borderRadius: 12, overflow: "hidden" },
   progressFill: { height: "100%" },
   progressText: { textAlign: "center", marginTop: 4, fontWeight: "600", color: "#7A4F2B" },
-  controls: { flexDirection: "row", justifyContent: "space-around", marginVertical: 12, flexWrap: "wrap" },
+  autoRow: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", marginVertical: 12 },
   controlBtn: { borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, borderWidth: 2, marginVertical: 4 },
   controlText: { fontWeight: "700" },
   speedInput: { borderWidth: 1, borderColor: "#CCC", borderRadius: 10, padding: 6, width: 80, textAlign: "center" },
-  historyRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 16 },
+  bottomControls: { position: "absolute", bottom: 20, left: 16, right: 16 },
+  buttonRow: { flexDirection: "row", justifyContent: "space-between", marginVertical: 6 },
+  bottomBtn: {
+    flex: 1,
+    marginHorizontal: 6,
+    backgroundColor: "#FFF9F0",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    borderWidth: 2,
+  },
+  bottomBtnText: { fontWeight: "700" },
   actionBtn: {
     backgroundColor: "#FFF9F0",
     borderRadius: 12,
@@ -349,15 +385,7 @@ const styles = StyleSheet.create({
   },
   actionText: { color: "#6B4426", fontWeight: "700" },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "center", alignItems: "center" },
-  modalCard: {
-    width: "90%",
-    backgroundColor: "#FFF9F0",
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#EFE2C4",
-    maxHeight: "85%",
-  },
+  modalCard: { width: "90%", backgroundColor: "#FFF9F0", borderRadius: 14, padding: 16, borderWidth: 1, borderColor: "#EFE2C4", maxHeight: "85%" },
   modalTitle: { fontSize: 18, fontWeight: "800", color: "#6B4426", marginBottom: 8 },
   input: { borderBottomWidth: 1.4, borderBottomColor: "#E6D8BE", fontSize: 16, color: "#6B4426", paddingVertical: 8 },
   modalActions: { flexDirection: "row", justifyContent: "flex-end", marginTop: 12 },
@@ -365,16 +393,7 @@ const styles = StyleSheet.create({
   modalBtnText: { color: "#FFF", fontWeight: "700" },
   modalBtnTextNeutral: { color: "#6B4426", fontWeight: "700", marginHorizontal: 4 },
   emptyHistory: { textAlign: "center", marginTop: 20, color: "#8A6A4F" },
-  historyItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: "#FFFAF0",
-    marginVertical: 4,
-    borderWidth: 1,
-    borderColor: "#EFE6CF",
-  },
+  historyItem: { flexDirection: "row", justifyContent: "space-between", padding: 12, borderRadius: 12, backgroundColor: "#FFFAF0", marginVertical: 4, borderWidth: 1, borderColor: "#EFE6CF" },
   historyDate: { fontWeight: "700", color: "#6B4426" },
   historyMeta: { color: "#8A6A4F", marginTop: 4 },
   deleteText: { color: "#7A5533", fontSize: 13, marginTop: 6 },
