@@ -1,26 +1,29 @@
 {
   "expo": {
-    "name": "Devotional Counter",
+    "name": "Naam Jap Counter",
     "slug": "devotional-counter",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#6B4E71"
+      "backgroundColor": "#020617"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.devotionalcounter.app"
+      "bundleIdentifier": "com.zencounter.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#6B4E71"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#020617"
       },
-      "package": "com.devotionalcounter.app"
+      "package": "com.zencounter.app"
     },
     "extra": {
       "eas": {
