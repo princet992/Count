@@ -193,6 +193,13 @@ function MainApp() {
     return history.reduce((max, h) => (h.count > max ? h.count : max), 0);
   };
 
+  const getChipValueStyle = (value) => {
+    const len = String(value).length;
+    if (len <= 5) return styles.chipValue;
+    if (len <= 7) return [styles.chipValue, styles.chipValueMedium];
+    return [styles.chipValue, styles.chipValueSmall];
+  };
+
   // Count how many consecutive days (including today) the user has completed their goal
   const getCurrentStreak = () => {
     if (!history || history.length === 0) return 0;
@@ -267,11 +274,11 @@ function MainApp() {
           <View style={[styles.headerStatsRow, !isTablet && styles.headerStatsRowMobile]}>
             <View style={styles.chip}>
               <Text style={styles.chipLabel}>Today</Text>
-              <Text style={styles.chipValue}>{count}</Text>
+              <Text style={getChipValueStyle(count)}>{count}</Text>
             </View>
             <View style={styles.chip}>
               <Text style={styles.chipLabel}>All time</Text>
-              <Text style={styles.chipValue}>{totalCount}</Text>
+              <Text style={getChipValueStyle(totalCount)}>{totalCount}</Text>
             </View>
           </View>
         </View>
@@ -426,7 +433,7 @@ function MainApp() {
                 <Text style={styles.modalBtnTextNeutral}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleSetGoal} style={[styles.modalBtn, { backgroundColor: themeColor }]}>
-                <Text style={[styles.modalBtnText, { color: themeColor }]}>Save</Text>
+                <Text style={styles.modalBtnText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -561,6 +568,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(148,163,184,0.4)",
     marginLeft: 8,
     alignItems: "flex-start",
+    maxWidth: 120,
   },
   chipLabel: {
     fontSize: 10,
@@ -573,6 +581,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#e5e7eb",
+    flexShrink: 1,
+  },
+  chipValueMedium: {
+    fontSize: 12,
+  },
+  chipValueSmall: {
+    fontSize: 11,
   },
 
   // Main counter
